@@ -1,9 +1,12 @@
-DROP DATABASE IF EXISTS ecommerce;
-CREATE DATABASE ecommerce;
+/**
+*	Graded Lab 4: DBMS
+*/
+
+CREATE DATABASE IF NOT EXISTS ecommerce;
 USE ecommerce;
 
 /* CREATE SUPPLIER TABLE */
-CREATE TABLE supplier(
+CREATE TABLE IF NOT EXISTS supplier(
 	supp_id INT PRIMARY KEY,
     supp_name VARCHAR(50) NOT NULL,
     supp_city VARCHAR(50) NOT NULL,
@@ -11,7 +14,7 @@ CREATE TABLE supplier(
 );
 
 /* CREATE CUSTOMER TABLE */
-CREATE TABLE customer(
+CREATE TABLE IF NOT EXISTS customer(
 	cus_id INT PRIMARY KEY,
     cus_name VARCHAR(20) NOT NULL,
     cus_phone VARCHAR(10) NOT NULL,
@@ -20,13 +23,13 @@ CREATE TABLE customer(
 );
 
 /* CREATE CATEGORY TABLE */
-CREATE TABLE category(
+CREATE TABLE IF NOT EXISTS category(
 	cat_id INT PRIMARY KEY,
 	cat_name VARCHAR(20) NOT NULL
 );
 
 /* CREATE PRODUCT TABLE */
-CREATE TABLE product(
+CREATE TABLE IF NOT EXISTS product(
 	pro_id INT PRIMARY KEY,
 	pro_name VARCHAR(20) NOT NULL DEFAULT 'Dummy',
 	pro_desc VARCHAR(60),
@@ -35,7 +38,7 @@ CREATE TABLE product(
 );
 
 /* CREATE SUPPLIER PRICING TABLE */
-CREATE TABLE supplier_pricing(
+CREATE TABLE IF NOT EXISTS supplier_pricing(
 	pricing_id INT PRIMARY KEY,
 	pro_id INT,
 	supp_id INT,
@@ -45,7 +48,7 @@ CREATE TABLE supplier_pricing(
 );
 
 /* CREATE ORDER TABLE */
-CREATE TABLE `order`(
+CREATE TABLE IF NOT EXISTS `order`(
 	ord_id INT PRIMARY KEY,
 	ord_amount INT NOT NULL,
 	ord_date DATE NOT NULL,
@@ -56,7 +59,7 @@ CREATE TABLE `order`(
 );
 
 /* CREATE RATING TABLE */
-CREATE TABLE rating(
+CREATE TABLE IF NOT EXISTS rating(
 	rat_id INT PRIMARY KEY,
 	ord_id INT,
 	rat_ratstars INT NOT NULL,
@@ -215,19 +218,14 @@ ON
 
 SELECT
 	S.supp_id AS 'Supplier ID', S.supp_name AS 'Supplier Name', 
-    S.supp_city AS City, CONCAT('(+91)', S.supp_phone) AS 'Phone Number'
+    S.supp_city AS City, S.supp_phone AS 'Phone Number'
 FROM
 	supplier AS S
 INNER JOIN
 	(
-		SELECT
-			supp_id, count(*) AS Count 
-		FROM
-			supplier_pricing
-		GROUP BY
-			supp_id
-		HAVING
-			Count > 1
+		SELECT supp_id, count(*) AS Count FROM supplier_pricing
+		GROUP BY supp_id
+		HAVING Count > 1
     ) AS Q
 ON
 	S.supp_id = Q.supp_id;
@@ -245,9 +243,7 @@ SELECT
 FROM
 	supplier_pricing SP, product P, category C
 WHERE
-	SP.pro_id = P.pro_id
-    AND
-    P.cat_id = C.cat_id
+	SP.pro_id = P.pro_id AND P.cat_id = C.cat_id
 GROUP BY
 	C.cat_id
 ORDER BY
@@ -263,15 +259,8 @@ SELECT
 FROM
 	product pro, supplier_pricing sp
 WHERE
-	pro.pro_id = sp.pro_id
-    AND sp.pricing_id IN (
-		SELECT
-			pricing_id
-		FROM
-			`order`
-		WHERE
-			ord_date > '2021-10-05'
-);
+	pro.pro_id = sp.pro_id AND
+    sp.pricing_id IN ( SELECT pricing_id FROM `order` WHERE ord_date > '2021-10-05' );
 
 /*
 	Question 8 :
